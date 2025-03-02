@@ -1,21 +1,23 @@
-FROM golang:1.24-alpine
+# Use the official Go image as a base
+FROM golang:1.22.12
 
+# Set the Current Working Directory inside the container
 WORKDIR /leaderboard_service
 
-COPY go.mod go.sum ./
+# Copy the go.mod and go.sum files
+COPY go.mod ./
+
+# Download Go modules
 RUN go mod download
 
+# Copy the source code into the container
 COPY . .
 
-# RUN go run github.com/99designs/gqlgen generate
-# RUN CGO_ENABLED=0 GOOS=linux go run github.com/99designs/gqlgen generate
-# RUN CGO_ENABLED=0 GOOS=linux go run github.com/99designs/gqlgen generate
-# RUN CGO_ENABLED=0 GOOS=linux go build -o /leaderboard_server
-# RUN CGO_ENABLED=0 GOOS=linux ./server
-# RUN go run server.go
-RUN CGO_ENABLED=0 GOOS=linux go build -o main .
+# Compile the Go server
+RUN go build -o server .
 
-# Expose the port the app runs on
+# Expose port 8080 to the outside world
 EXPOSE 8080
 
-CMD ["./main"]
+# Command to run the executable
+CMD ["./server"]

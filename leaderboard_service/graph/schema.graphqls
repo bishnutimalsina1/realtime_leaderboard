@@ -2,6 +2,8 @@
 #
 # https://gqlgen.com/getting-started/
 
+# go run github.com/99designs/gqlgen generate
+
 type Leaderboard {
   user_id: ID!
   user_name: String!
@@ -19,4 +21,3 @@ type Mutation {
   updateUser(user_id: ID!, user_name: String, score: Int): Leaderboard!
   deleteUser(user_id: ID!): Boolean!
 }
-
