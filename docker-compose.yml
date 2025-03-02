@@ -1,0 +1,46 @@
+version: '3.8'
+services:
+  leaderboard_service:
+    image: golang:1.24-alpine
+    build:
+      context: ./leaderboard_service
+      dockerfile: Dockerfile
+    command: echo "Running leaderboard service"
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=postgres
+      - DB_USER=your_user
+      - DB_PASSWORD=your_password
+      - DB_NAME=your_database
+    # depends_on:
+    #   postgres:
+    #     condition: service_healthy
+
+  # postgres:
+  #   image: postgres:latest
+  #   environment:
+  #     - POSTGRES_USER=your_user
+  #     - POSTGRES_PASSWORD=your_password
+  #     - POSTGRES_DB=your_database
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U your_user -d your_database"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+volumes:
+  postgres-data:
+
+
+# \c todo_db;
+# CREATE TABLE leaderboard (
+#   user_id SERIAL PRIMARY KEY,
+#   user_name VARCHAR(255) NOT NULL,
+#   rank INTEGER NOT NULL,
+#   score INTEGER NOT NULL
+# );
