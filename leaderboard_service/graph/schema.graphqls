@@ -1,0 +1,22 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type Leaderboard {
+  user_id: ID!
+  user_name: String!
+  rank: Int!
+  score: Int!
+}
+
+type Query {
+  leaderboard: [Leaderboard!]!
+  userById(user_id: ID!): Leaderboard
+}
+
+type Mutation {
+  createUser(user_name: String!, score: Int!): Leaderboard!
+  updateUser(user_id: ID!, user_name: String, score: Int): Leaderboard!
+  deleteUser(user_id: ID!): Boolean!
+}
+
