@@ -6,13 +6,16 @@ package graph
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"leaderboard_service/graph/model"
+	"log"
 )
 
 // CreateUser is the resolver for the createUser field.
 func (r *mutationResolver) CreateUser(ctx context.Context, userName string, score int32) (*model.Leaderboard, error) {
 	var user model.Leaderboard
-	err := r.DB.QueryRow("INSERT INTO leaderboard (user_name, rank, score) VALUES ($1, $2, $3) RETURNING user_id, user_name, rank, score", userName, 0, score).Scan(&user.UserID, &user.UserName, &user.Rank, &user.Score)
+	err := r.DB.QueryRow("INSERT INTO leaderboard (user_name, rank, score) VALUES ($1, $2, $3) RETURNING user_id, user_name, rank, score;", userName, 0, score).Scan(&user.UserID, &user.UserName, &user.Rank, &user.Score)
 	if err != nil {
 		return nil, err
 	}
@@ -24,13 +27,13 @@ func (r *mutationResolver) CreateUser(ctx context.Context, userName string, scor
 // UpdateUser is the resolver for the updateUser field.
 func (r *mutationResolver) UpdateUser(ctx context.Context, userID string, userName *string, score *int32) (*model.Leaderboard, error) {
 	if userName != nil {
-		_, err := r.DB.Exec("UPDATE leaderboard SET user_name = $1 WHERE user_id = $2", *userName, userID)
+		_, err := r.DB.Exec("UPDATE leaderboard SET user_name = $1 WHERE user_id = $2;", *userName, userID)
 		if err != nil {
 			return nil, err
 		}
 	}
 	if score != nil {
-		_, err := r.DB.Exec("UPDATE leaderboard SET score = $1 WHERE user_id = $2", *score, userID)
+		_, err := r.DB.Exec("UPDATE leaderboard SET score = $1 WHERE user_id = $2;", *score, userID)
 		if err != nil {
 			return nil, err
 		}
@@ -39,7 +42,7 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, userID string, userNa
 	updateRanks(r.DB)
 
 	var user model.Leaderboard
-	err := r.DB.QueryRow("SELECT user_id, user_name, rank, score FROM leaderboard WHERE user_id = $1", userID).Scan(&user.UserID, &user.UserName, &user.Rank, &user.Score)
+	err := r.DB.QueryRow("SELECT user_id, user_name, rank, score FROM leaderboard WHERE user_id = $1;", userID).Scan(&user.UserID, &user.UserName, &user.Rank, &user.Score)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +51,7 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, userID string, userNa
 
 // DeleteUser is the resolver for the deleteUser field.
 func (r *mutationResolver) DeleteUser(ctx context.Context, userID string) (bool, error) {
-	_, err := r.DB.Exec("DELETE FROM leaderboard WHERE user_id = $1", userID)
+	_, err := r.DB.Exec("DELETE FROM leaderboard WHERE user_id = $1;", userID)
 	if err != nil {
 		return false, err
 	}
@@ -59,9 +62,24 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, userID string) (bool,
 
 // Leaderboard is the resolver for the leaderboard field.
 func (r *queryResolver) Leaderboard(ctx context.Context) ([]*model.Leaderboard, error) {
-	rows, err := r.DB.Query("SELECT user_id, user_name, rank, score FROM leaderboard ORDER BY rank")
+	// Check if r is nil
+	if r == nil {
+		return nil, errors.New("queryResolver is nil")
+	}
+
+	// Check if DB is nil
+	if r.DB == nil {
+		return nil, errors.New("database is not initialized")
+	}
+
+	// Log the database connection
+	log.Printf("Database connection: %v", r.DB)
+
+	// Execute the query
+	rows, err := r.DB.Query("SELECT user_id, user_name, rank, score FROM leaderboard ORDER BY rank;")
 	if err != nil {
-		return nil, err
+		log.Printf("Query execution error: %v", err)
+		return nil, fmt.Errorf("failed to execute query: %w", err)
 	}
 	defer rows.Close()
 
@@ -69,18 +87,24 @@ func (r *queryResolver) Leaderboard(ctx context.Context) ([]*model.Leaderboard, 
 	for rows.Next() {
 		var user model.Leaderboard
 		if err := rows.Scan(&user.UserID, &user.UserName, &user.Rank, &user.Score); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
 		leaderboard = append(leaderboard, &user)
 	}
 
+	// Check for errors from iterating over rows
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating over rows: %w", err)
+	}
+
+	log.Printf("Leaderboard rows: %d", len(leaderboard))
 	return leaderboard, nil
 }
 
 // UserByID is the resolver for the userById field.
 func (r *queryResolver) UserByID(ctx context.Context, userID string) (*model.Leaderboard, error) {
 	var user model.Leaderboard
-	err := r.DB.QueryRow("SELECT user_id, user_name, rank, score FROM leaderboard WHERE user_id = $1", userID).Scan(&user.UserID, &user.UserName, &user.Rank, &user.Score)
+	err := r.DB.QueryRow("SELECT user_id, user_name, rank, score FROM leaderboard WHERE user_id = $1;", userID).Scan(&user.UserID, &user.UserName, &user.Rank, &user.Score)
 	if err != nil {
 		return nil, err
 	}
