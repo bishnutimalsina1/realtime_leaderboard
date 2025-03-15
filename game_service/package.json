@@ -1,0 +1,23 @@
+{
+  "name": "game_service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "compile": "tsc",
+    "start": "npm run compile && node ./dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "@apollo/server": "^4.11.3",
+    "graphql": "^16.10.0",
+    "uuid": "^11.1.0"
+  }
+}

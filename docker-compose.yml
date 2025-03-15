@@ -16,6 +16,17 @@ services:
       postgres:
         condition: service_healthy
 
+  game_service:
+      build:
+        context: ./game_service
+        dockerfile: Dockerfile
+      ports:
+        - "3000:3000"
+      environment:
+        - NODE_ENV=development
+      depends_on:
+        - postgres
+
   postgres:
     image: postgres:latest
     env_file:

@@ -30,7 +30,7 @@ docker exec -it 8b34ff8edc4e bash
 
 ##
 
-Run mutation
+Run mutation and queries
 
 ```js
 mutation createDummyUser($user_name: String!, $score: Int!) {
