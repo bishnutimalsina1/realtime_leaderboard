@@ -1,0 +1,129 @@
+<mxfile host="65bd71144e">
+    <diagram id="1wpUK6OHLdWYX9Pw8Wzb" name="Page-1">
+        <mxGraphModel dx="2068" dy="674" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="dc-boundary" value="docker-compose" style="rounded=1;strokeColor=#007bff;strokeWidth=2;dashed=1;fillColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="80" y="180" width="600" height="350" as="geometry"/>
+                </mxCell>
+                <mxCell id="12" value="API Gateway&lt;div&gt;URL: N/A&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e0e0e0;strokeColor=#333333;" parent="dc-boundary" vertex="1">
+                    <mxGeometry x="90" y="100" width="110" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="18" value="game_service&lt;br&gt;http://localhost:3000" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#cce5ff;strokeColor=#333333;" parent="dc-boundary" vertex="1">
+                    <mxGeometry x="250" y="20" width="150" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="8" value="leaderboard_service&lt;br&gt;URL: http://localhost:8080" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d4edda;strokeColor=#333333;" parent="dc-boundary" vertex="1">
+                    <mxGeometry x="245" y="220" width="170" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="7" value="postgres&lt;br&gt;localhost:5432" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#f8d7da;strokeColor=#333333;" parent="dc-boundary" vertex="1">
+                    <mxGeometry x="470" y="90" width="100" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="a2" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#333333;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" parent="dc-boundary" source="12" target="18" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="145" y="45"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="a3" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#333333;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="dc-boundary" source="12" target="8" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="145" y="255"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="a4" style="edgeStyle=none;html=1;endArrow=block;dashed=1;strokeColor=#007bff;" parent="dc-boundary" source="18" target="8" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="a5" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#333333;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" parent="dc-boundary" source="18" target="7" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="520" y="45"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="a6" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#333333;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;entryPerimeter=0;" parent="dc-boundary" source="8" target="7" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="520" y="255"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="kafka" value="Kafka&lt;br&gt;(event bus)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1bee7;strokeColor=#6a1b9a;strokeWidth=2;" vertex="1" parent="1">
+                    <mxGeometry x="-60" y="70" width="120" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="redis" value="Redis&lt;br&gt;(leaderboard cache)" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#f57c00;strokeWidth=2;" vertex="1" parent="1">
+                    <mxGeometry x="730" y="405" width="100" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="ws_sub" value="WebSocket/GraphQL Subscription" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b2dfdb;strokeColor=#00695c;strokeWidth=2;" vertex="1" parent="1">
+                    <mxGeometry x="-230" y="415" width="120" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow_gs_kafka" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#6a1b9a;strokeWidth=2;exitX=0.25;exitY=0;exitDx=0;exitDy=0;" edge="1" parent="1" source="18" target="kafka">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="368" y="90"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="arrow_kafka_lb" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#6a1b9a;strokeWidth=2;entryX=0.325;entryY=-0.004;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="kafka" target="8">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="30" y="110" as="sourcePoint"/>
+                        <Array as="points">
+                            <mxPoint y="380"/>
+                            <mxPoint x="380" y="380"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="arrow_lb_redis" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#f57c00;strokeWidth=2;" edge="1" parent="1" source="8" target="redis">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow_redis_lb" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#f57c00;strokeWidth=2;dashed=1;" edge="1" parent="1" source="redis" target="8">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow_lb_ws" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#00695c;strokeWidth=2;" edge="1" parent="1" source="8" target="ws_sub">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow_ws_client" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#00695c;strokeWidth=2;" edge="1" parent="1" source="ws_sub" target="15">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="bubble_kafka" value="Streams game events for real-time processing." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#6a1b9a;" vertex="1" parent="1">
+                    <mxGeometry x="-90" width="180" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow_bubble_kafka" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#6a1b9a;" edge="1" parent="1" source="bubble_kafka" target="kafka">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="bubble_redis" value="Fast leaderboard cache for instant access." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;" vertex="1" parent="1">
+                    <mxGeometry x="690" y="350" width="180" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow_bubble_redis" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#f57c00;" edge="1" parent="1" source="bubble_redis" target="redis">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="bubble_ws" value="Pushes real-time leaderboard updates to clients." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e0f2f1;strokeColor=#00695c;" vertex="1" parent="1">
+                    <mxGeometry x="-260" y="500" width="180" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow_bubble_ws" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#00695c;" edge="1" parent="1" source="bubble_ws" target="ws_sub">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="15" value="Client" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="-200" y="295" width="60" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="desc_game" value="Populates leaderboard in batches every 10 sec." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1976d2;" vertex="1" parent="1">
+                    <mxGeometry x="295" width="220" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow_desc_game" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#1976d2;" edge="1" parent="1" source="desc_game" target="18">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="desc_leaderboard" value="Serves leaderboard data via GraphQL API, connects to PostgreSQL." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d4edda;strokeColor=#388e3c;" vertex="1" parent="1">
+                    <mxGeometry x="300" y="570" width="220" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow_desc_leaderboard" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#388e3c;" edge="1" parent="1" source="desc_leaderboard" target="8">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="a1" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#333333;" parent="1" source="15" target="12" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
