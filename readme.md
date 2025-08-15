@@ -64,3 +64,10 @@ query GetLeaderboard {
   }
 }
 ```
+
+How it works:
+
+Zookeeper: Manages Kafka broker metadata, leader election, and coordination. It’s required for Kafka to operate.
+Kafka Broker: Handles event storage and delivery. It receives events from producers (e.g., game_service) and delivers them to consumers (e.g., leaderboard_service).
+Kafka Topic: A named stream (e.g., leaderboard-events) where events are published. Producers write to topics, consumers read from them.
+Kafka (Event Bus): Represents the overall event streaming system, connecting producers and consumers via topics.
