@@ -17,6 +17,11 @@ CREATE TABLE leaderboard (
 ## Create docker build without cache
 
 docker-compose build --no-cache
+docker-compose build --no-cache client_application
+
+
+## Build just one microservice
+docker compose up -d --build --no-deps client_application
 
 ## Run docker-compose
 docker-compose up -d
