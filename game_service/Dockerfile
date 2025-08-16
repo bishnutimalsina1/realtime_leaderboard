@@ -9,6 +9,8 @@ COPY . .
 
 RUN yarn compile
 
+ENV KAFKA_BROKERS=kafka:9092
+
 EXPOSE 3000
 
 CMD ["yarn", "start"]

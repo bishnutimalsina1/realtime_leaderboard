@@ -1,12 +1,12 @@
 import { ApolloServer } from "@apollo/server";
 import { startStandaloneServer } from "@apollo/server/standalone";
-import { v4 as uuidv4 } from "uuid";
-import { Kafka } from "kafkajs";
+import { v4 as uuidv4 } from 'uuid';
+import { Kafka } from 'kafkajs';
 
 // Kafka setup
 const kafka = new Kafka({
-  clientId: "game-service",
-  brokers: [process.env.KAFKA_BROKERS || "localhost:9092"],
+  clientId: 'game-service',
+  brokers: [process.env.KAFKA_BROKERS || 'localhost:9092']
 });
 
 const producer = kafka.producer();
@@ -53,38 +53,42 @@ const generateRandomUsers = (batchSize: number): User[] => {
   return users;
 };
 
+const connectWithRetry = async (producer: any, retries = 5, delay = 5000) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      await producer.connect();
+      console.log('Successfully connected to Kafka');
+      return;
+    } catch (err) {
+      console.error('Failed to connect to Kafka', err);
+      if (i < retries - 1) {
+        console.log(`Retrying in ${delay / 1000} seconds...`);
+        await new Promise(res => setTimeout(res, delay));
+      } else {
+        throw new Error('Could not connect to Kafka after multiple retries');
+      }
+    }
+  }
+};
+
 // Function to simulate publishing scores every second
 const publishScores = async (): Promise<void> => {
-  await producer.connect();
+  await connectWithRetry(producer);
   setInterval(async () => {
     const batch: User[] = generateRandomUsers(2);
     leaderboard = [...leaderboard, ...batch]; // Update leaderboard
-    const messages = batch.map((user) => ({
+    console.log("Published Batch:", batch);
+
+    const messages = batch.map(user => ({
       key: user.user_id,
-      value: JSON.stringify(user),
+      value: JSON.stringify(user)
     }));
 
-    const payloads = {
-      topic: "leaderboard-scores",
+    await producer.send({
+      topic: 'leaderboard-scores',
       messages: messages,
-    };
-    await producer.send(payloads);
-
-    // Test if message has been produced
-    const consumer = kafka.consumer({ groupId: "test-group" });
-    await consumer.connect();
-    await consumer.subscribe({
-      topic: "leaderboard-scores",
-      fromBeginning: true,
     });
 
-    await consumer.run({
-      eachMessage: async ({ topic, partition, message }) => {
-        console.log("consumer:", {
-          value: message.value.toString(),
-        });
-      },
-    });
   }, 20000); // Every 20 second
 };
 
