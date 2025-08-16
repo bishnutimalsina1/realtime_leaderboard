@@ -1,6 +1,15 @@
 import { ApolloServer } from "@apollo/server";
 import { startStandaloneServer } from "@apollo/server/standalone";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
+import { Kafka } from "kafkajs";
+
+// Kafka setup
+const kafka = new Kafka({
+  clientId: "game-service",
+  brokers: [process.env.KAFKA_BROKERS || "localhost:9092"],
+});
+
+const producer = kafka.producer();
 
 // Construct a schema, using GraphQL schema language
 const typeDefs = `#graphql
@@ -45,12 +54,38 @@ const generateRandomUsers = (batchSize: number): User[] => {
 };
 
 // Function to simulate publishing scores every second
-const publishScores = (): void => {
-  setInterval(() => {
-    const batch: User[] = generateRandomUsers(5);
+const publishScores = async (): Promise<void> => {
+  await producer.connect();
+  setInterval(async () => {
+    const batch: User[] = generateRandomUsers(2);
     leaderboard = [...leaderboard, ...batch]; // Update leaderboard
-    console.log("Published Batch:", batch);
-  }, 10000); // Every 10 second
+    const messages = batch.map((user) => ({
+      key: user.user_id,
+      value: JSON.stringify(user),
+    }));
+
+    const payloads = {
+      topic: "leaderboard-scores",
+      messages: messages,
+    };
+    await producer.send(payloads);
+
+    // Test if message has been produced
+    const consumer = kafka.consumer({ groupId: "test-group" });
+    await consumer.connect();
+    await consumer.subscribe({
+      topic: "leaderboard-scores",
+      fromBeginning: true,
+    });
+
+    await consumer.run({
+      eachMessage: async ({ topic, partition, message }) => {
+        console.log("consumer:", {
+          value: message.value.toString(),
+        });
+      },
+    });
+  }, 20000); // Every 20 second
 };
 
 const server = new ApolloServer({ typeDefs, resolvers });

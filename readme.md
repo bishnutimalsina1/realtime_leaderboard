@@ -76,3 +76,27 @@ Zookeeper: Manages Kafka broker metadata, leader election, and coordination. It�
 Kafka Broker: Handles event storage and delivery. It receives events from producers (e.g., game_service) and delivers them to consumers (e.g., leaderboard_service).
 Kafka Topic: A named stream (e.g., leaderboard-events) where events are published. Producers write to topics, consumers read from them.
 Kafka (Event Bus): Represents the overall event streaming system, connecting producers and consumers via topics.
+
+### How KRaft Works: The Royal Kitchen Analogy
+
+To understand how Kafka works without ZooKeeper (in KRaft mode), imagine a royal kitchen:
+
+*   **The Kitchen**: The entire Kafka Cluster.
+*   **The Chefs (Brokers)**: They do the actual work—handling and processing the data (the ingredients and recipes).
+*   **The Maîtres d' (Controllers)**: They don't cook, but they manage the entire kitchen operation. They hold the "Master Recipe Book" (the cluster's metadata).
+
+**The Old Way (with ZooKeeper):** The Master Recipe Book was kept in a separate library (**ZooKeeper**). The Maîtres d' had to constantly run back and forth, which was slow and created an external dependency.
+
+**The New Way (with KRaft):** The library is gone! The kitchen is now self-sufficient.
+
+*   **Controller Quorum**: Instead of one Maître d', there's now a small, elite council of them. They all hold a perfectly synchronized copy of the Master Recipe Book. This provides high availability and fault tolerance.
+*   **KRaft Protocol**: This is the strict set of rules the council uses to vote on changes and elect a leader (the **Active Controller**). This ensures all decisions are consistent and agreed upon by a majority.
+
+In short, KRaft replaces the external ZooKeeper with an internal, highly-efficient management council that runs the cluster, making Kafka simpler, faster, and more robust.
+
+## Kafka in KRaft Mode
+
+### Check all kafka topics
+/usr/bin/kafka-topics --list --bootstrap-server localhost:9092
+
+###

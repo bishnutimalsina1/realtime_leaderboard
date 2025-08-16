@@ -1,4 +1,5 @@
 pgdata/
+data/
 
 game_service/node_modules/
 game_service/dist/

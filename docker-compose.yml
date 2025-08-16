@@ -1,12 +1,47 @@
 version: "3.8"
+
+networks:
+  leaderboard-net:
+    driver: bridge
+
 services:
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka
+    networks:
+      - leaderboard-net
+    container_name: kafka
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_KRAFT_MODE: "true"  # This enables KRaft mode in Kafka.
+      KAFKA_PROCESS_ROLES: controller,broker  # Kafka acts as both broker and controller.
+      KAFKA_NODE_ID: 1  # A unique ID for this Kafka instance.
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@localhost:9093"  # Defines the controller voters.
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LOG_DIRS: /var/lib/kafka/data  # Where Kafka stores its logs.
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"  # Kafka will automatically create topics if needed.
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1  # Since we’re running one broker, one replica is enough.
+      KAFKA_LOG_RETENTION_HOURS: 168  # Keep logs for 7 days.
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0  # No delay for consumer rebalancing.
+      CLUSTER_ID: "Mk3OEYBSD34fcwNTJENDM2Qk"  # A unique ID for the Kafka cluster.
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data:/var/lib/kafka/data  # Store Kafka logs on your local machine.
+
   leaderboard_service:
     ports:
       - "8080:8080"
     build:
       context: ./leaderboard_service
       dockerfile: Dockerfile
-
+    networks:
+      - leaderboard-net
     environment:
       - DB_HOST=postgres
       - DB_USER=postgres
@@ -22,10 +57,14 @@ services:
         dockerfile: Dockerfile
       ports:
         - "3000:3000"
+      networks:
+        - leaderboard-net
       environment:
         - NODE_ENV=development
+        - KAFKA_BROKERS=kafka:9092
       depends_on:
         - postgres
+        - kafka
 
   postgres:
     image: postgres:latest
@@ -33,10 +72,12 @@ services:
       - base.env
     ports:
       - "5432:5432"
+    networks:
+      - leaderboard-net
     volumes:
       - ./pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      test: [ "CMD-SHELL", "pg_isready -d ${POSTGRES_DB} -U ${POSTGRES_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -47,6 +88,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5173:5173"
+    networks:
+      - leaderboard-net
     environment:
       - NODE_ENV=development
     depends_on:
