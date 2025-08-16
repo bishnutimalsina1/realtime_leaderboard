@@ -8,10 +8,10 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"leaderboard_service/graph/model"
 	"strconv"
 	"sync"
 	"sync/atomic"
-	"leaderboard_service/graph/model"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -774,7 +774,7 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 	}
 	res := resTmp.(*model.Leaderboard)
 	fc.Result = res
-	return ec.marshalNLeaderboard2ᚖtest_serviceᚋgraphᚋmodelᚐLeaderboard(ctx, field.Selections, res)
+	return ec.marshalNLeaderboard2ᚖleaderboard_serviceᚋgraphᚋmodelᚐLeaderboard(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -839,7 +839,7 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 	}
 	res := resTmp.(*model.Leaderboard)
 	fc.Result = res
-	return ec.marshalNLeaderboard2ᚖtest_serviceᚋgraphᚋmodelᚐLeaderboard(ctx, field.Selections, res)
+	return ec.marshalNLeaderboard2ᚖleaderboard_serviceᚋgraphᚋmodelᚐLeaderboard(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_updateUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -959,7 +959,7 @@ func (ec *executionContext) _Query_leaderboard(ctx context.Context, field graphq
 	}
 	res := resTmp.([]*model.Leaderboard)
 	fc.Result = res
-	return ec.marshalNLeaderboard2ᚕᚖtest_serviceᚋgraphᚋmodelᚐLeaderboardᚄ(ctx, field.Selections, res)
+	return ec.marshalNLeaderboard2ᚕᚖleaderboard_serviceᚋgraphᚋmodelᚐLeaderboardᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_leaderboard(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1010,7 +1010,7 @@ func (ec *executionContext) _Query_userById(ctx context.Context, field graphql.C
 	}
 	res := resTmp.(*model.Leaderboard)
 	fc.Result = res
-	return ec.marshalOLeaderboard2ᚖtest_serviceᚋgraphᚋmodelᚐLeaderboard(ctx, field.Selections, res)
+	return ec.marshalOLeaderboard2ᚖleaderboard_serviceᚋgraphᚋmodelᚐLeaderboard(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_userById(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3725,11 +3725,11 @@ func (ec *executionContext) marshalNInt2int32(ctx context.Context, sel ast.Selec
 	return res
 }
 
-func (ec *executionContext) marshalNLeaderboard2test_serviceᚋgraphᚋmodelᚐLeaderboard(ctx context.Context, sel ast.SelectionSet, v model.Leaderboard) graphql.Marshaler {
+func (ec *executionContext) marshalNLeaderboard2leaderboard_serviceᚋgraphᚋmodelᚐLeaderboard(ctx context.Context, sel ast.SelectionSet, v model.Leaderboard) graphql.Marshaler {
 	return ec._Leaderboard(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNLeaderboard2ᚕᚖtest_serviceᚋgraphᚋmodelᚐLeaderboardᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Leaderboard) graphql.Marshaler {
+func (ec *executionContext) marshalNLeaderboard2ᚕᚖleaderboard_serviceᚋgraphᚋmodelᚐLeaderboardᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Leaderboard) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -3753,7 +3753,7 @@ func (ec *executionContext) marshalNLeaderboard2ᚕᚖtest_serviceᚋgraphᚋmod
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNLeaderboard2ᚖtest_serviceᚋgraphᚋmodelᚐLeaderboard(ctx, sel, v[i])
+			ret[i] = ec.marshalNLeaderboard2ᚖleaderboard_serviceᚋgraphᚋmodelᚐLeaderboard(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -3773,7 +3773,7 @@ func (ec *executionContext) marshalNLeaderboard2ᚕᚖtest_serviceᚋgraphᚋmod
 	return ret
 }
 
-func (ec *executionContext) marshalNLeaderboard2ᚖtest_serviceᚋgraphᚋmodelᚐLeaderboard(ctx context.Context, sel ast.SelectionSet, v *model.Leaderboard) graphql.Marshaler {
+func (ec *executionContext) marshalNLeaderboard2ᚖleaderboard_serviceᚋgraphᚋmodelᚐLeaderboard(ctx context.Context, sel ast.SelectionSet, v *model.Leaderboard) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -4093,7 +4093,7 @@ func (ec *executionContext) marshalOInt2ᚖint32(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalOLeaderboard2ᚖtest_serviceᚋgraphᚋmodelᚐLeaderboard(ctx context.Context, sel ast.SelectionSet, v *model.Leaderboard) graphql.Marshaler {
+func (ec *executionContext) marshalOLeaderboard2ᚖleaderboard_serviceᚋgraphᚋmodelᚐLeaderboard(ctx context.Context, sel ast.SelectionSet, v *model.Leaderboard) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

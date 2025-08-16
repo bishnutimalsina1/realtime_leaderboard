@@ -15,6 +15,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
 	_ "github.com/lib/pq" // Import PostgreSQL driver
+	"github.com/rs/cors"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -51,10 +52,16 @@ func main() {
 		Cache: lru.New[string](100),
 	})
 
+	corsHandler := cors.New(cors.Options{
+		AllowedOrigins: []string{"http://localhost:5173"},
+		AllowCredentials: true,
+		Debug: true,
+	}).Handler
+
 	log.Println("Resolver initialized successfully")
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", srv)
+	http.Handle("/query", corsHandler(srv))
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
