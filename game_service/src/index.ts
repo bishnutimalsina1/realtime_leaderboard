@@ -1,22 +1,33 @@
 import { ApolloServer } from "@apollo/server";
 import { startStandaloneServer } from "@apollo/server/standalone";
-import { v4 as uuidv4 } from 'uuid';
-import { Kafka } from 'kafkajs';
+import { v4 as uuidv4 } from "uuid";
+import { Kafka, Producer } from "kafkajs";
 
 // Kafka setup
+const KAFKA_BROKER = process.env.KAFKA_BROKERS;
+if (!KAFKA_BROKER) {
+  console.error("KAFKA_BROKERS environment variable is not set.");
+  process.exit(1);
+}
+
 const kafka = new Kafka({
-  clientId: 'game-service',
-  brokers: [process.env.KAFKA_BROKERS || 'localhost:9092']
+  clientId: "game-service",
+  brokers: [KAFKA_BROKER],
+  retry: {
+    retries: 5,
+    initialRetryTime: 300,
+  },
 });
 
 const producer = kafka.producer();
+const topic = "leaderboard-scores";
 
 // Construct a schema, using GraphQL schema language
 const typeDefs = `#graphql
   type User {
     user_id: String
     user_name: String
-    score: String
+    score: Int
   }
   type Query {
     leaderboard: [User]
@@ -36,7 +47,9 @@ const resolvers = {
   },
 };
 
-// Mock leaderboard
+// Mock leaderboard - In a real app, this would be a database.
+// This will grow indefinitely, which is a memory leak.
+// For a mock service, this might be acceptable.
 let leaderboard: User[] = [];
 
 // Function to generate random user data
@@ -53,51 +66,69 @@ const generateRandomUsers = (batchSize: number): User[] => {
   return users;
 };
 
-const connectWithRetry = async (producer: any, retries = 5, delay = 5000) => {
-  for (let i = 0; i < retries; i++) {
+// Function to simulate publishing scores
+const startScorePublisher = async (): Promise<() => Promise<void>> => {
+  console.log(`Connecting to Kafka broker at ${KAFKA_BROKER}...`);
+  await producer.connect();
+  console.log("Successfully connected to Kafka.");
+
+  const intervalId = setInterval(async () => {
     try {
-      await producer.connect();
-      console.log('Successfully connected to Kafka');
-      return;
-    } catch (err) {
-      console.error('Failed to connect to Kafka', err);
-      if (i < retries - 1) {
-        console.log(`Retrying in ${delay / 1000} seconds...`);
-        await new Promise(res => setTimeout(res, delay));
-      } else {
-        throw new Error('Could not connect to Kafka after multiple retries');
-      }
+      const batch: User[] = generateRandomUsers(2);
+      leaderboard.push(...batch); // Update in-memory leaderboard
+      console.log("Published Batch:", batch);
+
+      const messages = batch.map((user) => ({
+        key: user.user_id,
+        value: JSON.stringify(user),
+      }));
+
+      await producer.send({
+        topic: topic,
+        messages: messages,
+      });
+    } catch (error) {
+      console.error("Failed to send message to Kafka", error);
     }
-  }
+  }, 20000); // Every 20 seconds
+
+  // Return a function to stop the publisher
+  return async () => {
+    console.log("Stopping score publisher...");
+    clearInterval(intervalId);
+    await producer.disconnect();
+    console.log("Kafka producer disconnected.");
+  };
 };
 
-// Function to simulate publishing scores every second
-const publishScores = async (): Promise<void> => {
-  await connectWithRetry(producer);
-  setInterval(async () => {
-    const batch: User[] = generateRandomUsers(2);
-    leaderboard = [...leaderboard, ...batch]; // Update leaderboard
-    console.log("Published Batch:", batch);
+const main = async () => {
+  let stopPublisher: () => Promise<void>;
 
-    const messages = batch.map(user => ({
-      key: user.user_id,
-      value: JSON.stringify(user)
-    }));
+  try {
+    const server = new ApolloServer({ typeDefs, resolvers });
 
-    await producer.send({
-      topic: 'leaderboard-scores',
-      messages: messages,
+    const { url } = await startStandaloneServer(server, {
+      listen: { port: 4000 },
     });
+    console.log(`🚀  Game server ready at: ${url}`);
 
-  }, 20000); // Every 20 second
+    stopPublisher = await startScorePublisher();
+  } catch (error) {
+    console.error("Failed to start the service", error);
+    process.exit(1);
+  }
+
+  const gracefulShutdown = async (signal: string) => {
+    console.log(`\nReceived ${signal}. Shutting down gracefully...`);
+    if (stopPublisher) {
+      await stopPublisher();
+    }
+    process.exit(0);
+  };
+
+  // Listen for termination signals
+  process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+  process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 };
 
-const server = new ApolloServer({ typeDefs, resolvers });
-
-const { url } = await startStandaloneServer(server, {
-  listen: { port: 4000 },
-});
-
-console.log(`🚀  Game server ready at: ${url}`);
-
-publishScores();
+main();
