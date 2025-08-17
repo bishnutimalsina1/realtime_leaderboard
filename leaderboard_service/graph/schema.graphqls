@@ -13,6 +13,7 @@ type Leaderboard {
 
 type Query {
   leaderboard(limit: Int): [Leaderboard!]!
+  leaderboardSQL(limit: Int): [Leaderboard!]!
   userById(user_id: ID!): Leaderboard
 }
 

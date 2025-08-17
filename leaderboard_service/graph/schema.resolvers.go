@@ -152,6 +152,52 @@ func (r *queryResolver) Leaderboard(ctx context.Context, limit *int32) ([]*model
 	return leaderboard, nil
 }
 
+// LeaderboardSQL is the resolver for the leaderboardSQL field.
+func (r *queryResolver) LeaderboardSQL(ctx context.Context, limit *int32) ([]*model.Leaderboard, error) {
+	if r == nil || r.DB == nil {
+		return nil, errors.New("database is not initialized")
+	}
+
+	// Build the query with window functions to calculate ranks
+	query := `
+		WITH RankedScores AS (
+			SELECT 
+				user_id,
+				user_name,
+				score,
+				RANK() OVER (ORDER BY score DESC) as rank
+			FROM leaderboard
+		)
+		SELECT user_id, user_name, rank, score 
+		FROM RankedScores
+	`
+
+	// Add limit if provided
+	if limit != nil {
+		query += fmt.Sprintf(" LIMIT %d", *limit)
+	}
+
+	// Execute the query
+	rows, err := r.DB.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch from PostgreSQL: %w", err)
+	}
+	defer rows.Close()
+
+	// Build the leaderboard
+	var leaderboard []*model.Leaderboard
+	for rows.Next() {
+		user := &model.Leaderboard{}
+		if err := rows.Scan(&user.UserID, &user.UserName, &user.Rank, &user.Score); err != nil {
+			return nil, fmt.Errorf("failed to scan user data: %w", err)
+		}
+		leaderboard = append(leaderboard, user)
+	}
+
+	log.Printf("SQL Leaderboard rows: %d", len(leaderboard))
+	return leaderboard, nil
+}
+
 // UserByID is the resolver for the userById field.
 func (r *queryResolver) UserByID(ctx context.Context, userID string) (*model.Leaderboard, error) {
 	var user model.Leaderboard

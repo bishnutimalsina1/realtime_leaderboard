@@ -7,6 +7,18 @@ import {
   gql,
 } from "@apollo/client";
 import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  BarElement,
+} from "chart.js";
+import { Line, Bar } from "react-chartjs-2";
+import {
   Container,
   Table,
   TableBody,
@@ -86,14 +98,32 @@ let theme = createTheme({
 
 theme = responsiveFontSizes(theme);
 
+// Register ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
 const client = new ApolloClient({
   uri: "http://localhost:8080/query",
   cache: new InMemoryCache(),
 });
 
 const LEADERBOARD_QUERY = gql`
-  query GetLeaderboard($limit: Int!) {
-    leaderboard(limit: $limit) {
+  query GetLeaderboards($limit: Int!) {
+    redis: leaderboard(limit: $limit) {
+      rank
+      user_id
+      user_name
+      score
+    }
+    sql: leaderboardSQL(limit: $limit) {
       rank
       user_id
       user_name
@@ -122,6 +152,124 @@ const UPDATE_PUBLISHER_CONFIG = gql`
     }
   }
 `;
+
+interface PerformanceData {
+  timestamp: number;
+  redisTime: number;
+  sqlTime: number;
+  dataSize: number;
+}
+
+function PerformanceMetrics({
+  performanceData,
+}: {
+  performanceData: PerformanceData[];
+}) {
+  const latencyChartData = {
+    labels: performanceData.map(() => ""),
+    datasets: [
+      {
+        label: "Redis Query Time (ms)",
+        data: performanceData.map((d) => d.redisTime),
+        borderColor: "rgba(75, 192, 192, 1)",
+        backgroundColor: "rgba(75, 192, 192, 0.2)",
+      },
+      {
+        label: "SQL Query Time (ms)",
+        data: performanceData.map((d) => d.sqlTime),
+        borderColor: "rgba(255, 99, 132, 1)",
+        backgroundColor: "rgba(255, 99, 132, 0.2)",
+      },
+    ],
+  };
+
+  const compareChartData = {
+    labels: ["Average Query Time (ms)", "Max Query Time (ms)"],
+    datasets: [
+      {
+        label: "Redis",
+        data: [
+          performanceData.reduce((acc, curr) => acc + curr.redisTime, 0) /
+            performanceData.length,
+          Math.max(...performanceData.map((d) => d.redisTime)),
+        ],
+        backgroundColor: "rgba(75, 192, 192, 0.5)",
+      },
+      {
+        label: "SQL",
+        data: [
+          performanceData.reduce((acc, curr) => acc + curr.sqlTime, 0) /
+            performanceData.length,
+          Math.max(...performanceData.map((d) => d.sqlTime)),
+        ],
+        backgroundColor: "rgba(255, 99, 132, 0.5)",
+      },
+    ],
+  };
+
+  return (
+    <Paper
+      sx={{
+        p: 2,
+        borderRadius: 4,
+        background: "linear-gradient(145deg, #ffffffff, #ffffffff)",
+      }}
+    >
+      <Typography variant="h6" gutterBottom sx={{ color: "black" }}>
+        Performance Metrics
+      </Typography>
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <Typography variant="subtitle1" gutterBottom sx={{ color: "black" }}>
+            Query Response Times
+          </Typography>
+          <Box sx={{ height: 200 }}>
+            <Line
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    title: {
+                      display: true,
+                      text: "Response Time (ms)",
+                    },
+                  },
+                },
+                animation: false,
+              }}
+              data={latencyChartData}
+            />
+          </Box>
+        </Grid>
+        <Grid item xs={12}>
+          <Typography variant="subtitle1" gutterBottom>
+            Performance Comparison
+          </Typography>
+          <Box sx={{ height: 200 }}>
+            <Bar
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    title: {
+                      display: true,
+                      text: "Time (ms)",
+                    },
+                  },
+                },
+              }}
+              data={compareChartData}
+            />
+          </Box>
+        </Grid>
+      </Grid>
+    </Paper>
+  );
+}
 
 function PublisherSettings() {
   const { loading, error, data } = useQuery(PUBLISHER_CONFIG_QUERY, {
@@ -207,9 +355,26 @@ function PublisherSettings() {
 
 function LeaderboardDashboard() {
   const [limit, setLimit] = useState(10);
+  const [performanceData, setPerformanceData] = useState<PerformanceData[]>([]);
+
   const { loading, error, data } = useQuery(LEADERBOARD_QUERY, {
     variables: { limit },
     pollInterval: 5000,
+    onCompleted: (data) => {
+      // Record performance data
+      const newMetric: PerformanceData = {
+        timestamp: Date.now(),
+        redisTime: data.redis?.length ? Math.random() * 10 + 5 : 0, // Simulated time - replace with actual metrics
+        sqlTime: data.sql?.length ? Math.random() * 20 + 10 : 0, // Simulated time - replace with actual metrics
+        dataSize: data.redis?.length || 0,
+      };
+
+      setPerformanceData((prev) => {
+        const newData = [...prev, newMetric];
+        // Keep last 20 data points
+        return newData.slice(-20);
+      });
+    },
   });
 
   const handleSliderChange = (event: Event, newValue: number | number[]) => {
@@ -222,86 +387,169 @@ function LeaderboardDashboard() {
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-      <PublisherSettings />
       <Grid container spacing={4}>
+        <PublisherSettings />
+        <Paper
+          sx={{
+            p: 2,
+            display: "flex",
+            flexDirection: "column",
+            marginBottom: 2,
+            background: "linear-gradient(145deg, #6d6d6dff, #595757ff)",
+            borderRadius: 4,
+          }}
+        >
+          <Typography id="input-slider" gutterBottom>
+            Number of Top Players to Display
+          </Typography>
+          <Grid alignItems="center">
+            <Grid item xs>
+              <Slider
+                size="small"
+                value={typeof limit === "number" ? limit : 0}
+                onChange={handleSliderChange}
+                aria-labelledby="input-slider"
+                valueLabelDisplay="auto"
+                min={1}
+                max={100}
+              />
+            </Grid>
+          </Grid>
+        </Paper>
         <Grid item xs={12}>
-          <Paper
-            sx={{
-              p: 2,
-              display: "flex",
-              flexDirection: "column",
-              marginBottom: 2,
-              background: "linear-gradient(145deg, #6d6d6dff, #595757ff)",
-              borderRadius: 4,
-            }}
-          >
-            <Typography id="input-slider" gutterBottom>
-              Number of Top Players to Display
-            </Typography>
-            <Grid alignItems="center">
-              <Grid item xs>
-                <Slider
-                  size="small"
-                  value={typeof limit === "number" ? limit : 0}
-                  onChange={handleSliderChange}
-                  aria-labelledby="input-slider"
-                  valueLabelDisplay="auto"
-                  min={1}
-                  max={100}
-                />
+          <Grid container spacing={2}>
+            <Grid item xs={12} lg={8}>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <Paper
+                    sx={{
+                      borderRadius: 4,
+                      p: { xs: 2, sm: 3, md: 4 },
+                      background:
+                        "linear-gradient(145deg, #6d6d6dff, #595757ff)",
+                      height: "100%",
+                    }}
+                  >
+                    <Typography variant="h6" gutterBottom>
+                      Redis Leaderboard
+                      {loading && <CircularProgress size={20} sx={{ ml: 2 }} />}
+                    </Typography>
+                    {error && (
+                      <Alert severity="error" sx={{ mb: 2 }}>
+                        Failed to fetch Redis leaderboard data.
+                      </Alert>
+                    )}
+                    <TableContainer>
+                      <Table aria-label="redis leaderboard table">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell sx={{ fontWeight: "bold" }}>
+                              Rank
+                            </TableCell>
+                            <TableCell sx={{ fontWeight: "bold" }}>
+                              User
+                            </TableCell>
+                            <TableCell
+                              align="right"
+                              sx={{ fontWeight: "bold" }}
+                            >
+                              Score
+                            </TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {data?.redis?.map((entry: any) => (
+                            <TableRow
+                              key={entry.user_id}
+                              sx={{
+                                "&:nth-of-type(odd)": {
+                                  backgroundColor: "rgba(0, 0, 0, 0.2)",
+                                },
+                                "&:hover": {
+                                  backgroundColor: "rgba(0, 0, 0, 0.4)",
+                                },
+                              }}
+                            >
+                              <TableCell component="th" scope="row">
+                                {entry.rank}
+                              </TableCell>
+                              <TableCell>{entry.user_name}</TableCell>
+                              <TableCell align="right">{entry.score}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </Paper>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Paper
+                    sx={{
+                      borderRadius: 4,
+                      p: { xs: 2, sm: 3, md: 4 },
+                      background:
+                        "linear-gradient(145deg, #6d6d6dff, #595757ff)",
+                      height: "100%",
+                    }}
+                  >
+                    <Typography variant="h6" gutterBottom>
+                      SQL Leaderboard
+                      {loading && <CircularProgress size={20} sx={{ ml: 2 }} />}
+                    </Typography>
+                    {error && (
+                      <Alert severity="error" sx={{ mb: 2 }}>
+                        Failed to fetch SQL leaderboard data.
+                      </Alert>
+                    )}
+                    <TableContainer>
+                      <Table aria-label="sql leaderboard table">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell sx={{ fontWeight: "bold" }}>
+                              Rank
+                            </TableCell>
+                            <TableCell sx={{ fontWeight: "bold" }}>
+                              User
+                            </TableCell>
+                            <TableCell
+                              align="right"
+                              sx={{ fontWeight: "bold" }}
+                            >
+                              Score
+                            </TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {data?.sql?.map((entry: any) => (
+                            <TableRow
+                              key={entry.user_id}
+                              sx={{
+                                "&:nth-of-type(odd)": {
+                                  backgroundColor: "rgba(0, 0, 0, 0.2)",
+                                },
+                                "&:hover": {
+                                  backgroundColor: "rgba(0, 0, 0, 0.4)",
+                                },
+                              }}
+                            >
+                              <TableCell component="th" scope="row">
+                                {entry.rank}
+                              </TableCell>
+                              <TableCell>{entry.user_name}</TableCell>
+                              <TableCell align="right">{entry.score}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </Paper>
+                </Grid>
               </Grid>
             </Grid>
-          </Paper>
-          <Paper
-            sx={{
-              borderRadius: 4,
-              p: { xs: 2, sm: 3, md: 4 },
-              background: "linear-gradient(145deg, #6d6d6dff, #595757ff)",
-            }}
-          >
-            {loading && (
-              <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
-                <CircularProgress />
-              </Box>
-            )}
-            {error && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                Failed to fetch leaderboard data. Please try again later.
-              </Alert>
-            )}
-            <TableContainer>
-              <Table aria-label="leaderboard table">
-                <TableHead>
-                  <TableRow>
-                    <TableCell sx={{ fontWeight: "bold" }}>Rank</TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>User</TableCell>
-                    <TableCell align="right" sx={{ fontWeight: "bold" }}>
-                      Score
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {data?.leaderboard.map((entry: any) => (
-                    <TableRow
-                      key={entry.user_id}
-                      sx={{
-                        "&:nth-of-type(odd)": {
-                          backgroundColor: "rgba(0, 0, 0, 0.2)",
-                        },
-                        "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.4)" },
-                      }}
-                    >
-                      <TableCell component="th" scope="row">
-                        {entry.rank}
-                      </TableCell>
-                      <TableCell>{entry.user_name}</TableCell>
-                      <TableCell align="right">{entry.score}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Paper>
+            <Grid item xs={12} lg={4}>
+              <PerformanceMetrics performanceData={performanceData} />
+            </Grid>
+          </Grid>
         </Grid>
       </Grid>
     </Container>
