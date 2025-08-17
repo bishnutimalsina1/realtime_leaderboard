@@ -21,12 +21,8 @@ import {
   Alert,
   Box,
   Grid,
-  Card,
-  CardContent,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
+  Slider,
+  TextField,
   IconButton,
   Button,
 } from "@mui/material";
@@ -36,10 +32,8 @@ import {
   responsiveFontSizes,
 } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
-import StarIcon from "@mui/icons-material/Star";
-import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import GroupIcon from "@mui/icons-material/Group";
 import MenuIcon from "@mui/icons-material/Menu";
+import { useState } from "react";
 
 let theme = createTheme({
   palette: {
@@ -97,8 +91,8 @@ const client = new ApolloClient({
 });
 
 const LEADERBOARD_QUERY = gql`
-  query GetLeaderboard {
-    leaderboard(limit: 10) {
+  query GetLeaderboard($limit: Int!) {
+    leaderboard(limit: $limit) {
       rank
       user_id
       user_name
@@ -108,14 +102,51 @@ const LEADERBOARD_QUERY = gql`
 `;
 
 function LeaderboardDashboard() {
+  const [limit, setLimit] = useState(10);
   const { loading, error, data } = useQuery(LEADERBOARD_QUERY, {
+    variables: { limit },
     pollInterval: 5000,
   });
+
+  const handleSliderChange = (event: Event, newValue: number | number[]) => {
+    setLimit(newValue as number);
+  };
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setLimit(event.target.value === "" ? 0 : Number(event.target.value));
+  };
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       <Grid container spacing={4}>
         <Grid item xs={12}>
+          <Paper
+            sx={{
+              p: 2,
+              display: "flex",
+              flexDirection: "column",
+              marginBottom: 2,
+              background: "linear-gradient(145deg, #6d6d6dff, #595757ff)",
+              borderRadius: 4,
+            }}
+          >
+            <Typography id="input-slider" gutterBottom>
+              Number of Top Players to Display
+            </Typography>
+            <Grid alignItems="center">
+              <Grid item xs>
+                <Slider
+                  size="small"
+                  value={typeof limit === "number" ? limit : 0}
+                  onChange={handleSliderChange}
+                  aria-labelledby="input-slider"
+                  valueLabelDisplay="auto"
+                  min={1}
+                  max={100}
+                />
+              </Grid>
+            </Grid>
+          </Paper>
           <Paper
             sx={{
               borderRadius: 4,
