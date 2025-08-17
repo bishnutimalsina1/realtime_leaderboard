@@ -118,16 +118,30 @@ const client = new ApolloClient({
 const LEADERBOARD_QUERY = gql`
   query GetLeaderboards($limit: Int!) {
     redis: leaderboard(limit: $limit) {
-      rank
-      user_id
-      user_name
-      score
+      data {
+        rank
+        user_id
+        user_name
+        score
+      }
+      metrics {
+        queryTime
+        recordCount
+        dataSource
+      }
     }
     sql: leaderboardSQL(limit: $limit) {
-      rank
-      user_id
-      user_name
-      score
+      data {
+        rank
+        user_id
+        user_name
+        score
+      }
+      metrics {
+        queryTime
+        recordCount
+        dataSource
+      }
     }
   }
 `;
@@ -271,6 +285,43 @@ function PerformanceMetrics({
   );
 }
 
+function PipelineDiagram() {
+  return (
+    <Paper
+      sx={{
+        p: 2,
+        mb: 2,
+        borderRadius: 4,
+        background: "linear-gradient(145deg, #6d6d6dff, #595757ff)",
+      }}
+    >
+      <Typography variant="h6" gutterBottom>
+        Pipeline Architecture
+      </Typography>
+      <Box
+        sx={{
+          width: '100%',
+          height: '500px',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: 2,
+          overflow: 'hidden',
+        }}
+      >
+        <img 
+          src="/pipeline_diagram.png"
+          alt="Pipeline Architecture"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            backgroundColor: 'white',
+          }}
+        />
+      </Box>
+    </Paper>
+  );
+}
+
 function PublisherSettings() {
   const { loading, error, data } = useQuery(PUBLISHER_CONFIG_QUERY, {
     pollInterval: 5000,
@@ -304,52 +355,55 @@ function PublisherSettings() {
   // if (error) return <Alert severity="error">Error loading publisher settings</Alert>;
 
   return (
-    <Paper
-      sx={{
-        p: 2,
-        display: "flex",
-        flexDirection: "column",
-        marginBottom: 2,
-        background: "linear-gradient(145deg, #6d6d6dff, #595757ff)",
-        borderRadius: 4,
-      }}
-    >
-      <Typography variant="h6" gutterBottom>
-        Publisher Settings
-      </Typography>
-      <Grid container spacing={2} alignItems="center">
-        <Grid item xs={12} sm={5}>
-          <TextField
-            label="Batch Size"
-            type="number"
-            value={batchSize}
-            onChange={(e) => setBatchSize(Number(e.target.value))}
-            fullWidth
-            InputProps={{ inputProps: { min: 1 } }}
-          />
+    <>
+      <PipelineDiagram />
+      <Paper
+        sx={{
+          p: 2,
+          display: "flex",
+          flexDirection: "column",
+          marginBottom: 2,
+          background: "linear-gradient(145deg, #6d6d6dff, #595757ff)",
+          borderRadius: 4,
+        }}
+      >
+        <Typography variant="h6" gutterBottom>
+          Publisher Settings
+        </Typography>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} sm={5}>
+            <TextField
+              label="Batch Size"
+              type="number"
+              value={batchSize}
+              onChange={(e) => setBatchSize(Number(e.target.value))}
+              fullWidth
+              InputProps={{ inputProps: { min: 1 } }}
+            />
+          </Grid>
+          <Grid item xs={12} sm={5}>
+            <TextField
+              label="Interval (seconds)"
+              type="number"
+              value={intervalSeconds}
+              onChange={(e) => setIntervalSeconds(Number(e.target.value))}
+              fullWidth
+              InputProps={{ inputProps: { min: 1 } }}
+            />
+          </Grid>
+          <Grid item xs={12} sm={2}>
+            <Button
+              variant="contained"
+              onClick={handleUpdate}
+              fullWidth
+              sx={{ height: "56px" }}
+            >
+              Update
+            </Button>
+          </Grid>
         </Grid>
-        <Grid item xs={12} sm={5}>
-          <TextField
-            label="Interval (seconds)"
-            type="number"
-            value={intervalSeconds}
-            onChange={(e) => setIntervalSeconds(Number(e.target.value))}
-            fullWidth
-            InputProps={{ inputProps: { min: 1 } }}
-          />
-        </Grid>
-        <Grid item xs={12} sm={2}>
-          <Button
-            variant="contained"
-            onClick={handleUpdate}
-            fullWidth
-            sx={{ height: "56px" }}
-          >
-            Update
-          </Button>
-        </Grid>
-      </Grid>
-    </Paper>
+      </Paper>
+    </>
   );
 }
 
@@ -361,12 +415,12 @@ function LeaderboardDashboard() {
     variables: { limit },
     pollInterval: 5000,
     onCompleted: (data) => {
-      // Record performance data
+      // Record actual performance data from server
       const newMetric: PerformanceData = {
         timestamp: Date.now(),
-        redisTime: data.redis?.length ? Math.random() * 10 + 5 : 0, // Simulated time - replace with actual metrics
-        sqlTime: data.sql?.length ? Math.random() * 20 + 10 : 0, // Simulated time - replace with actual metrics
-        dataSize: data.redis?.length || 0,
+        redisTime: data.redis?.metrics.queryTime || 0,
+        sqlTime: data.sql?.metrics.queryTime || 0,
+        dataSize: data.redis?.metrics.recordCount || 0,
       };
 
       setPerformanceData((prev) => {
@@ -458,7 +512,7 @@ function LeaderboardDashboard() {
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          {data?.redis?.map((entry: any) => (
+                          {data?.redis?.data?.map((entry: any) => (
                             <TableRow
                               key={entry.user_id}
                               sx={{
@@ -520,7 +574,7 @@ function LeaderboardDashboard() {
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          {data?.sql?.map((entry: any) => (
+                          {data?.sql?.data?.map((entry: any) => (
                             <TableRow
                               key={entry.user_id}
                               sx={{

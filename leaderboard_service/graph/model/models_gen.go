@@ -9,8 +9,19 @@ type Leaderboard struct {
 	Score    int32  `json:"score"`
 }
 
+type LeaderboardResponse struct {
+	Data    []*Leaderboard `json:"data"`
+	Metrics *QueryMetrics  `json:"metrics"`
+}
+
 type Mutation struct {
 }
 
 type Query struct {
+}
+
+type QueryMetrics struct {
+	QueryTime   float64 `json:"queryTime"`
+	RecordCount int32   `json:"recordCount"`
+	DataSource  string  `json:"dataSource"`
 }

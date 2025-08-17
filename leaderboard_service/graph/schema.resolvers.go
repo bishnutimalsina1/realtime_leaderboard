@@ -12,6 +12,7 @@ import (
 	"leaderboard_service/kafka"
 	"log"
 	"strings"
+	"time"
 
 	redis "github.com/go-redis/redis/v8"
 )
@@ -78,7 +79,8 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, userID string) (bool,
 }
 
 // Leaderboard is the resolver for the leaderboard field.
-func (r *queryResolver) Leaderboard(ctx context.Context, limit *int32) ([]*model.Leaderboard, error) {
+func (r *queryResolver) Leaderboard(ctx context.Context, limit *int32) (*model.LeaderboardResponse, error) {
+	startTime := time.Now()
 	if r == nil {
 		return nil, errors.New("queryResolver is nil")
 	}
@@ -90,10 +92,10 @@ func (r *queryResolver) Leaderboard(ctx context.Context, limit *int32) ([]*model
 	// Get sorted leaderboard from Redis
 	// ZREVRANGE to get scores in descending order (highest first)
 	// WITHSCORES to get both member (user_id) and their score
-	// Use limit if provided, otherwise fetch top 10 entries
+	// Use limit if provided, otherwise fetch all entries
 	end := int64(-1) // Default to all entries
 	if limit != nil {
-		end = int64(10) - 1 // -1 because Redis range is inclusive
+		end = int64(*limit) - 1 // -1 because Redis range is inclusive
 	}
 	redisResult, err := r.RDB.ZRevRangeWithScores(ctx, kafka.RedisLeaderboardKey, 0, end).Result()
 	if err != nil {
@@ -101,7 +103,15 @@ func (r *queryResolver) Leaderboard(ctx context.Context, limit *int32) ([]*model
 	}
 
 	if len(redisResult) == 0 {
-		return []*model.Leaderboard{}, nil
+		queryTime := time.Since(startTime).Seconds() * 1000
+		return &model.LeaderboardResponse{
+			Data: []*model.Leaderboard{},
+			Metrics: &model.QueryMetrics{
+				QueryTime:   queryTime,
+				RecordCount: 0,
+				DataSource:  "Redis",
+			},
+		}, nil
 	}
 
 	// Create a map to store user IDs and their scores
@@ -148,12 +158,22 @@ func (r *queryResolver) Leaderboard(ctx context.Context, limit *int32) ([]*model
 		leaderboard = append(leaderboard, user)
 	}
 
-	log.Printf("Leaderboard rows: %d", len(leaderboard))
-	return leaderboard, nil
+	queryTime := time.Since(startTime).Seconds() * 1000 // Convert to milliseconds
+	log.Printf("Redis Leaderboard rows: %d, Query time: %.2fms", len(leaderboard), queryTime)
+
+	return &model.LeaderboardResponse{
+		Data: leaderboard,
+		Metrics: &model.QueryMetrics{
+			QueryTime:   queryTime,
+			RecordCount: int32(len(leaderboard)),
+			DataSource:  "Redis",
+		},
+	}, nil
 }
 
 // LeaderboardSQL is the resolver for the leaderboardSQL field.
-func (r *queryResolver) LeaderboardSQL(ctx context.Context, limit *int32) ([]*model.Leaderboard, error) {
+func (r *queryResolver) LeaderboardSQL(ctx context.Context, limit *int32) (*model.LeaderboardResponse, error) {
+	startTime := time.Now()
 	if r == nil || r.DB == nil {
 		return nil, errors.New("database is not initialized")
 	}
@@ -194,8 +214,17 @@ func (r *queryResolver) LeaderboardSQL(ctx context.Context, limit *int32) ([]*mo
 		leaderboard = append(leaderboard, user)
 	}
 
-	log.Printf("SQL Leaderboard rows: %d", len(leaderboard))
-	return leaderboard, nil
+	queryTime := time.Since(startTime).Seconds() * 1000 // Convert to milliseconds
+	log.Printf("SQL Leaderboard rows: %d, Query time: %.2fms", len(leaderboard), queryTime)
+
+	return &model.LeaderboardResponse{
+		Data: leaderboard,
+		Metrics: &model.QueryMetrics{
+			QueryTime:   queryTime,
+			RecordCount: int32(len(leaderboard)),
+			DataSource:  "PostgreSQL",
+		},
+	}, nil
 }
 
 // UserByID is the resolver for the userById field.

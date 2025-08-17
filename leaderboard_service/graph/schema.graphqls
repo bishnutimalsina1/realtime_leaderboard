@@ -4,6 +4,17 @@
 
 # go run github.com/99designs/gqlgen generate
 
+type QueryMetrics {
+  queryTime: Float!
+  recordCount: Int!
+  dataSource: String!
+}
+
+type LeaderboardResponse {
+  data: [Leaderboard!]!
+  metrics: QueryMetrics!
+}
+
 type Leaderboard {
   user_id: ID!
   user_name: String!
@@ -12,8 +23,8 @@ type Leaderboard {
 }
 
 type Query {
-  leaderboard(limit: Int): [Leaderboard!]!
-  leaderboardSQL(limit: Int): [Leaderboard!]!
+  leaderboard(limit: Int): LeaderboardResponse!
+  leaderboardSQL(limit: Int): LeaderboardResponse!
   userById(user_id: ID!): Leaderboard
 }
 

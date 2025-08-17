@@ -107,7 +107,7 @@ const generateRandomUsers = (batchSize: number): User[] => {
     const user: User = {
       user_id: uuidv4(),
       user_name: `User_${Math.floor(Math.random() * 10000)}`,
-      score: Math.floor(Math.random() * 1000), // Random score between 0-999
+      score: Math.floor(Math.random() * 50001), // Random score between 0-50000
     };
     users.push(user);
   }
@@ -146,12 +146,14 @@ const startScorePublisher = async (): Promise<() => Promise<void>> => {
     } catch (error) {
       console.error("Failed to send message to Kafka", error);
     }
-  }, 20000); // Every 20 seconds
+  }, publisherConfig.intervalSeconds * 1000); // Every 20 seconds
 
   // Return a function to stop the publisher
   return async () => {
     console.log("Stopping score publisher...");
-    clearInterval(intervalId);
+    if (currentInterval) {
+      clearInterval(currentInterval);
+    }
     await producer.disconnect();
     console.log("Kafka producer disconnected.");
   };

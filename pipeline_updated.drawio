@@ -1,62 +1,14 @@
 <mxfile host="65bd71144e">
     <diagram id="1wpUK6OHLdWYX9Pw8Wzb" name="Page-1">
-        <mxGraphModel dx="2413" dy="1998" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="2230" dy="1193" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="19" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E6E6E6;dashed=1;strokeColor=#6600CC;strokeWidth=3;" vertex="1" parent="1">
-                    <mxGeometry x="-550" y="-20" width="620" height="240" as="geometry"/>
-                </mxCell>
-                <mxCell id="controller_quorum" value="Controller Quorum (KRaft)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1976d2;strokeWidth=2;" vertex="1" parent="1">
-                    <mxGeometry x="-290" y="15" width="140" height="30" as="geometry"/>
-                </mxCell>
-                <mxCell id="kafka_broker" value="Kafka Broker" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#8e24aa;strokeWidth=2;" vertex="1" parent="1">
-                    <mxGeometry x="-280" y="115" width="120" height="30" as="geometry"/>
-                </mxCell>
-                <mxCell id="kafka_topic" value="Kafka Topic: leaderboard-events" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffde7;strokeColor=#fbc02d;strokeWidth=2;" vertex="1" parent="1">
-                    <mxGeometry x="-310" y="165" width="180" height="30" as="geometry"/>
-                </mxCell>
-                <mxCell id="arrow_cq_kafka" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#1976d2;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="controller_quorum" target="kafka_broker">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points"/>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="arrow_kafka_topic" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#8e24aa;strokeWidth=2;" edge="1" parent="1" source="kafka_broker" target="kafka_topic">
-                    <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
-                <mxCell id="bubble_broker" value="Handles event storage and delivery." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#8e24aa;" vertex="1" parent="1">
-                    <mxGeometry x="-490" y="115" width="130" height="30" as="geometry"/>
-                </mxCell>
-                <mxCell id="arrow_bubble_broker" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#8e24aa;" edge="1" parent="1" source="bubble_broker" target="kafka_broker">
-                    <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
-                <mxCell id="bubble_topic" value="Stores leaderboard event stream." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffde7;strokeColor=#fbc02d;" vertex="1" parent="1">
-                    <mxGeometry x="-490" y="165" width="130" height="30" as="geometry"/>
-                </mxCell>
-                <mxCell id="arrow_bubble_topic" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#fbc02d;" edge="1" parent="1" source="bubble_topic" target="kafka_topic">
-                    <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
-                <mxCell id="bubble_cq" value="Manages metadata and leader election internally, replacing ZooKeeper." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1976d2;" vertex="1" parent="1">
-                    <mxGeometry x="-540" y="7.5" width="180" height="45" as="geometry"/>
-                </mxCell>
-                <mxCell id="arrow_bubble_cq" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#1976d2;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="bubble_cq" target="controller_quorum">
-                    <mxGeometry relative="1" as="geometry">
-                        <mxPoint x="-330" y="29.074074074073906" as="sourcePoint"/>
-                        <mxPoint x="-300" y="45" as="targetPoint"/>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="arrow_topic_kafka" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#fbc02d;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="kafka_topic" target="kafka">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="-80" y="180"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
                 <mxCell id="dc-boundary" value="docker-compose" style="rounded=1;strokeColor=#007bff;strokeWidth=2;dashed=1;fillColor=#E6E6E6;" parent="1" vertex="1">
                     <mxGeometry x="80" y="180" width="600" height="350" as="geometry"/>
                 </mxCell>
-                <mxCell id="12" value="API Gateway&lt;div&gt;URL: N/A???&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e0e0e0;strokeColor=#333333;" parent="dc-boundary" vertex="1">
-                    <mxGeometry x="90" y="100" width="110" height="60" as="geometry"/>
+                <mxCell id="12" value="API Gateway&lt;div&gt;leaderboard_service&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e0e0e0;strokeColor=#333333;" parent="dc-boundary" vertex="1">
+                    <mxGeometry x="79" y="100" width="133" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="18" value="game_service&lt;br&gt;http://localhost:3000" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#cce5ff;strokeColor=#333333;" parent="dc-boundary" vertex="1">
                     <mxGeometry x="250" y="20" width="150" height="50" as="geometry"/>
@@ -66,13 +18,6 @@
                 </mxCell>
                 <mxCell id="7" value="postgres&lt;br&gt;localhost:5432" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#f8d7da;strokeColor=#333333;" parent="dc-boundary" vertex="1">
                     <mxGeometry x="470" y="90" width="100" height="110" as="geometry"/>
-                </mxCell>
-                <mxCell id="a2" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#333333;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" parent="dc-boundary" source="12" target="18" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="145" y="45"/>
-                        </Array>
-                    </mxGeometry>
                 </mxCell>
                 <mxCell id="a3" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#333333;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="dc-boundary" source="12" target="8" edge="1">
                     <mxGeometry relative="1" as="geometry">
@@ -98,8 +43,56 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
+                <mxCell id="19" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E6E6E6;dashed=1;strokeColor=#6600CC;strokeWidth=3;" parent="1" vertex="1">
+                    <mxGeometry x="-550" y="-20" width="620" height="240" as="geometry"/>
+                </mxCell>
+                <mxCell id="controller_quorum" value="Controller Quorum (KRaft)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1976d2;strokeWidth=2;" parent="1" vertex="1">
+                    <mxGeometry x="-290" y="15" width="140" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="kafka_broker" value="Kafka Broker" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#8e24aa;strokeWidth=2;" parent="1" vertex="1">
+                    <mxGeometry x="-280" y="115" width="120" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="kafka_topic" value="Kafka Topic: leaderboard-events" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffde7;strokeColor=#fbc02d;strokeWidth=2;" parent="1" vertex="1">
+                    <mxGeometry x="-310" y="165" width="180" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow_cq_kafka" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#1976d2;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="controller_quorum" target="kafka_broker" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="arrow_kafka_topic" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#8e24aa;strokeWidth=2;" parent="1" source="kafka_broker" target="kafka_topic" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="bubble_broker" value="Handles event storage and delivery." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#8e24aa;" parent="1" vertex="1">
+                    <mxGeometry x="-490" y="115" width="130" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow_bubble_broker" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#8e24aa;" parent="1" source="bubble_broker" target="kafka_broker" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="bubble_topic" value="Stores leaderboard event stream." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffde7;strokeColor=#fbc02d;" parent="1" vertex="1">
+                    <mxGeometry x="-490" y="165" width="130" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow_bubble_topic" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#fbc02d;" parent="1" source="bubble_topic" target="kafka_topic" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="bubble_cq" value="Manages metadata and leader election internally, replacing ZooKeeper." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1976d2;" parent="1" vertex="1">
+                    <mxGeometry x="-540" y="7.5" width="180" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow_bubble_cq" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#1976d2;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="bubble_cq" target="controller_quorum" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="-330" y="29.074074074073906" as="sourcePoint"/>
+                        <mxPoint x="-300" y="45" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="arrow_topic_kafka" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#fbc02d;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" parent="1" source="kafka_topic" target="kafka" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="-80" y="180"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
                 <mxCell id="kafka" value="Kafka&lt;br&gt;(event bus)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1bee7;strokeColor=#6a1b9a;strokeWidth=2;" parent="1" vertex="1">
-                    <mxGeometry x="-110" y="75" width="120" height="40" as="geometry"/>
+                    <mxGeometry x="-110" y="80" width="120" height="40" as="geometry"/>
                 </mxCell>
                 <mxCell id="redis" value="Redis&lt;br&gt;(leaderboard cache)" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#f57c00;strokeWidth=2;" parent="1" vertex="1">
                     <mxGeometry x="730" y="377.5" width="100" height="115" as="geometry"/>
@@ -153,8 +146,8 @@
                 <mxCell id="arrow_bubble_ws" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#00695c;" parent="1" source="bubble_ws" target="ws_sub" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="15" value="Client" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
-                    <mxGeometry x="-200" y="295" width="60" height="30" as="geometry"/>
+                <mxCell id="15" value="Client app" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#1FD8FF;strokeColor=default;" parent="1" vertex="1">
+                    <mxGeometry x="-230" y="283" width="119" height="54" as="geometry"/>
                 </mxCell>
                 <mxCell id="desc_game" value="Populates leaderboard in batches every 10 sec." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1976d2;" parent="1" vertex="1">
                     <mxGeometry x="295" width="220" height="40" as="geometry"/>
