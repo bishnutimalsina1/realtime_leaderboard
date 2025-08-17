@@ -2,6 +2,10 @@
 
 ![Pipeline Diagram](client_application/public/pipeline_diagram.png)
 
+## Client application
+![Client Application](client_application.png)
+
+
 ## Estimation
 
 - **Daily Active Users (DAU):** 5 million
