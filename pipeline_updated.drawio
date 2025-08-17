@@ -1,10 +1,10 @@
 <mxfile host="65bd71144e">
     <diagram id="1wpUK6OHLdWYX9Pw8Wzb" name="Page-1">
-        <mxGraphModel dx="2230" dy="1193" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="2149" dy="1146" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="dc-boundary" value="docker-compose" style="rounded=1;strokeColor=#007bff;strokeWidth=2;dashed=1;fillColor=#E6E6E6;" parent="1" vertex="1">
+                <mxCell id="dc-boundary" value="" style="rounded=1;strokeColor=#007bff;strokeWidth=2;dashed=1;fillColor=#E6E6E6;" parent="1" vertex="1">
                     <mxGeometry x="80" y="180" width="600" height="350" as="geometry"/>
                 </mxCell>
                 <mxCell id="12" value="API Gateway&lt;div&gt;leaderboard_service&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e0e0e0;strokeColor=#333333;" parent="dc-boundary" vertex="1">
@@ -23,16 +23,6 @@
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
                             <mxPoint x="145" y="255"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="a4" style="edgeStyle=none;html=1;endArrow=block;dashed=1;strokeColor=#007bff;" parent="dc-boundary" source="18" target="8" edge="1">
-                    <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
-                <mxCell id="a5" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#333333;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" parent="dc-boundary" source="18" target="7" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="520" y="45"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -97,7 +87,7 @@
                 <mxCell id="redis" value="Redis&lt;br&gt;(leaderboard cache)" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#f57c00;strokeWidth=2;" parent="1" vertex="1">
                     <mxGeometry x="730" y="377.5" width="100" height="115" as="geometry"/>
                 </mxCell>
-                <mxCell id="ws_sub" value="WebSocket/GraphQL Subscription" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b2dfdb;strokeColor=#00695c;strokeWidth=2;" parent="1" vertex="1">
+                <mxCell id="ws_sub" value="GraphQL Polling Query" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b2dfdb;strokeColor=#00695c;strokeWidth=2;" parent="1" vertex="1">
                     <mxGeometry x="-230" y="415" width="120" height="40" as="geometry"/>
                 </mxCell>
                 <mxCell id="arrow_gs_kafka" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#6a1b9a;strokeWidth=2;exitX=0.25;exitY=0;exitDx=0;exitDy=0;" parent="1" source="18" target="kafka" edge="1">
@@ -107,6 +97,11 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
+                <mxCell id="25" value="&lt;h2&gt;Publisher&lt;/h2&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="arrow_gs_kafka">
+                    <mxGeometry x="0.2036" y="1" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
                 <mxCell id="arrow_kafka_lb" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#6a1b9a;strokeWidth=2;entryX=0.325;entryY=-0.004;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="kafka" target="8" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="30" y="110" as="sourcePoint"/>
@@ -114,6 +109,11 @@
                             <mxPoint x="-50" y="380"/>
                             <mxPoint x="380" y="380"/>
                         </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="26" value="&lt;h2&gt;Consumer&lt;/h2&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="arrow_kafka_lb">
+                    <mxGeometry x="-0.0783" y="1" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="arrow_lb_redis" style="edgeStyle=none;html=1;endArrow=block;strokeColor=#f57c00;strokeWidth=2;" parent="1" source="8" target="redis" edge="1">
