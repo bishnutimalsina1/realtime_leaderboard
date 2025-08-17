@@ -9,7 +9,10 @@ import (
 	"errors"
 	"fmt"
 	"leaderboard_service/graph/model"
+	"leaderboard_service/kafka"
 	"log"
+
+	"github.com/go-redis/redis/v8"
 )
 
 // CreateUser is the resolver for the createUser field.
@@ -20,7 +23,13 @@ func (r *mutationResolver) CreateUser(ctx context.Context, userName string, scor
 		return nil, err
 	}
 	// Update the ranks after adding the new user
-	updateRanks(r.DB)
+	// updateRanks(r.DB) // This is no longer needed and is a performance bottleneck
+
+	// Also update Redis to keep it in sync
+	r.RDB.ZAdd(context.Background(), kafka.RedisLeaderboardKey, &redis.Z{
+		Score:  float64(score),
+		Member: user.UserID,
+	})
 	return &user, nil
 }
 
@@ -39,7 +48,12 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, userID string, userNa
 		}
 	}
 	// Update the ranks after modifying the user
-	updateRanks(r.DB)
+	// updateRanks(r.DB) // This is no longer needed
+
+	// Also update Redis to keep it in sync
+	if score != nil {
+		r.RDB.ZAdd(context.Background(), kafka.RedisLeaderboardKey, &redis.Z{Score: float64(*score), Member: userID})
+	}
 
 	var user model.Leaderboard
 	err := r.DB.QueryRow("SELECT user_id, user_name, rank, score FROM leaderboard WHERE user_id = $1;", userID).Scan(&user.UserID, &user.UserName, &user.Rank, &user.Score)
@@ -55,46 +69,75 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, userID string) (bool,
 	if err != nil {
 		return false, err
 	}
-	// Update the ranks after deleting the user
-	updateRanks(r.DB)
+	// updateRanks(r.DB) // This is no longer needed
+
+	// Also remove from Redis
+	r.RDB.ZRem(context.Background(), kafka.RedisLeaderboardKey, userID)
 	return true, nil
 }
 
 // Leaderboard is the resolver for the leaderboard field.
 func (r *queryResolver) Leaderboard(ctx context.Context) ([]*model.Leaderboard, error) {
-	// Check if r is nil
 	if r == nil {
 		return nil, errors.New("queryResolver is nil")
 	}
 
-	// Check if DB is nil
-	if r.DB == nil {
-		return nil, errors.New("database is not initialized")
+	if r.RDB == nil || r.DB == nil {
+		return nil, errors.New("redis or database is not initialized")
 	}
 
-	// Log the database connection
-	log.Printf("Database connection: %v", r.DB)
-
-	// Execute the query
-	rows, err := r.DB.Query("SELECT user_id, user_name, rank, score FROM leaderboard ORDER BY rank;")
+	// Get sorted leaderboard from Redis
+	// ZREVRANGE to get scores in descending order (highest first)
+	// WITHSCORES to get both member (user_id) and their score
+	redisResult, err := r.RDB.ZRevRangeWithScores(ctx, kafka.RedisLeaderboardKey, 0, -1).Result()
 	if err != nil {
-		log.Printf("Query execution error: %v", err)
-		return nil, fmt.Errorf("failed to execute query: %w", err)
+		return nil, fmt.Errorf("failed to fetch from Redis: %w", err)
+	}
+
+	if len(redisResult) == 0 {
+		return []*model.Leaderboard{}, nil
+	}
+
+	// Create a map to store user IDs and their scores
+	userScores := make(map[string]float64)
+	var userIDs []string
+
+	// Extract user IDs and scores from Redis result
+	for _, z := range redisResult {
+		userID := fmt.Sprint(z.Member)
+		userIDs = append(userIDs, userID)
+		userScores[userID] = z.Score
+	}
+
+	// Fetch user names from PostgreSQL for all users in the leaderboard
+	query := "SELECT user_id, user_name FROM leaderboard WHERE user_id = ANY($1)"
+	rows, err := r.DB.Query(query, userIDs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch user names: %w", err)
 	}
 	defer rows.Close()
 
-	var leaderboard []*model.Leaderboard
+	// Create a map of user IDs to their names
+	userNames := make(map[string]string)
 	for rows.Next() {
-		var user model.Leaderboard
-		if err := rows.Scan(&user.UserID, &user.UserName, &user.Rank, &user.Score); err != nil {
-			return nil, fmt.Errorf("failed to scan row: %w", err)
+		var userID, userName string
+		if err := rows.Scan(&userID, &userName); err != nil {
+			return nil, fmt.Errorf("failed to scan user data: %w", err)
 		}
-		leaderboard = append(leaderboard, &user)
+		userNames[userID] = userName
 	}
 
-	// Check for errors from iterating over rows
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating over rows: %w", err)
+	// Build the final leaderboard
+	var leaderboard []*model.Leaderboard
+	for rank, z := range redisResult {
+		userID := fmt.Sprint(z.Member)
+		user := &model.Leaderboard{
+			UserID:   userID,
+			UserName: userNames[userID],
+			Score:    int32(z.Score),
+			Rank:     int32(rank + 1), // rank is 0-based, add 1 for human-readable ranks
+		}
+		leaderboard = append(leaderboard, user)
 	}
 
 	log.Printf("Leaderboard rows: %d", len(leaderboard))

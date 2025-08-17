@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"leaderboard_service/graph"
+	"leaderboard_service/kafka"
 	"log"
 	"net/http"
 	"os"
@@ -14,6 +16,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/go-redis/redis/v8"
 	_ "github.com/lib/pq" // Import PostgreSQL driver
 	"github.com/rs/cors"
 	"github.com/vektah/gqlparser/v2/ast"
@@ -34,10 +37,20 @@ func main() {
 	}
 	defer db.Close() // Ensure the database connection is closed when the application exits
 
+	// Initialize Redis client
+	rdb, err := initializeRedis()
+	if err != nil {
+		log.Fatalf("Error initializing Redis: %v", err)
+	}
+
 	// Create an instance of Resolver and assign the DB connection
 	resolver := &graph.Resolver{
-		DB: db,
+		DB:  db,
+		RDB: rdb,
 	}
+
+	// Start Kafka consumer in a goroutine
+	go kafka.StartConsumer(context.Background(), db, rdb)
 
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
 
@@ -95,4 +108,17 @@ func initializeDatabase() (*sql.DB, error) {
 	}
 
 	return db, nil
+}
+
+func initializeRedis() (*redis.Client, error) {
+	redisHost := os.Getenv("REDIS_HOST")
+	if redisHost == "" {
+		redisHost = "redis" // Default for docker-compose
+	}
+	rdb := redis.NewClient(&redis.Options{
+		Addr: redisHost + ":6379",
+	})
+
+	_, err := rdb.Ping(context.Background()).Result()
+	return rdb, err
 }

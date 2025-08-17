@@ -5,11 +5,16 @@ go run github.com/99designs/gqlgen generate
 ## Create table
 psql -U postgres
 
+## Create using sql
+docker exec -i leaderboard-postgres-1 psql -U postgres postgres < /Users/bishnutimalsina/Documents/Projects/leaderboard/leaderboard_service/migrations/01_update_user_id_type.sql
+
+## Query the DB
+docker exec -i leaderboard-postgres-1 psql -U postgres postgres < /Users/bishnutimalsina/Documents/Projects/leaderboard/leaderboard_service/migrations/check_data.sql
+
 ```sql
 CREATE TABLE leaderboard (
-  user_id SERIAL PRIMARY KEY,
+  user_id VARCHAR(36) PRIMARY KEY,
   user_name VARCHAR(255) NOT NULL,
-  rank INTEGER NOT NULL,
   score INTEGER NOT NULL
 );
 ```

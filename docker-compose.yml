@@ -66,6 +66,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_started
 
   game_service:
       build:
@@ -99,6 +101,13 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  redis:
+    image: "redis:alpine"
+    networks:
+      - leaderboard-net
+    ports:
+      - "6379:6379"
 
   client_application:
     build:
