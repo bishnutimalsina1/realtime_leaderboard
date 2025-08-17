@@ -11,6 +11,7 @@ import (
 	"leaderboard_service/graph/model"
 	"leaderboard_service/kafka"
 	"log"
+	"strings"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -110,8 +111,10 @@ func (r *queryResolver) Leaderboard(ctx context.Context) ([]*model.Leaderboard, 
 	}
 
 	// Fetch user names from PostgreSQL for all users in the leaderboard
-	query := "SELECT user_id, user_name FROM leaderboard WHERE user_id = ANY($1)"
-	rows, err := r.DB.Query(query, userIDs)
+	// Using string_to_array to convert list of UUIDs to a PostgreSQL array
+	query := "SELECT user_id, user_name FROM leaderboard WHERE user_id = ANY(string_to_array($1, ',')::uuid[])"
+	userIDsList := strings.Join(userIDs, ",")
+	rows, err := r.DB.Query(query, userIDsList)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch user names: %w", err)
 	}
