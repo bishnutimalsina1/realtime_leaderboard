@@ -12,7 +12,7 @@ type Leaderboard {
 }
 
 type Query {
-  leaderboard: [Leaderboard!]!
+  leaderboard(limit: Int): [Leaderboard!]!
   userById(user_id: ID!): Leaderboard
 }
 

@@ -98,7 +98,7 @@ const client = new ApolloClient({
 
 const LEADERBOARD_QUERY = gql`
   query GetLeaderboard {
-    leaderboard {
+    leaderboard(limit: 10) {
       rank
       user_id
       user_name

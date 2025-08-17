@@ -13,7 +13,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/go-redis/redis/v8"
+	redis "github.com/go-redis/redis/v8"
 )
 
 // CreateUser is the resolver for the createUser field.
@@ -78,7 +78,7 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, userID string) (bool,
 }
 
 // Leaderboard is the resolver for the leaderboard field.
-func (r *queryResolver) Leaderboard(ctx context.Context) ([]*model.Leaderboard, error) {
+func (r *queryResolver) Leaderboard(ctx context.Context, limit *int32) ([]*model.Leaderboard, error) {
 	if r == nil {
 		return nil, errors.New("queryResolver is nil")
 	}
@@ -90,7 +90,12 @@ func (r *queryResolver) Leaderboard(ctx context.Context) ([]*model.Leaderboard, 
 	// Get sorted leaderboard from Redis
 	// ZREVRANGE to get scores in descending order (highest first)
 	// WITHSCORES to get both member (user_id) and their score
-	redisResult, err := r.RDB.ZRevRangeWithScores(ctx, kafka.RedisLeaderboardKey, 0, -1).Result()
+	// Use limit if provided, otherwise fetch top 10 entries
+	end := int64(-1) // Default to all entries
+	if limit != nil {
+		end = int64(10) - 1 // -1 because Redis range is inclusive
+	}
+	redisResult, err := r.RDB.ZRevRangeWithScores(ctx, kafka.RedisLeaderboardKey, 0, end).Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch from Redis: %w", err)
 	}

@@ -61,7 +61,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Leaderboard func(childComplexity int) int
+		Leaderboard func(childComplexity int, limit *int32) int
 		UserByID    func(childComplexity int, userID string) int
 	}
 }
@@ -72,7 +72,7 @@ type MutationResolver interface {
 	DeleteUser(ctx context.Context, userID string) (bool, error)
 }
 type QueryResolver interface {
-	Leaderboard(ctx context.Context) ([]*model.Leaderboard, error)
+	Leaderboard(ctx context.Context, limit *int32) ([]*model.Leaderboard, error)
 	UserByID(ctx context.Context, userID string) (*model.Leaderboard, error)
 }
 
@@ -164,7 +164,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.Leaderboard(childComplexity), true
+		args, err := ec.field_Query_leaderboard_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Leaderboard(childComplexity, args["limit"].(*int32)), true
 
 	case "Query.userById":
 		if e.complexity.Query.UserByID == nil {
@@ -444,6 +449,29 @@ func (ec *executionContext) field_Query___type_argsName(
 	}
 
 	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_leaderboard_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_leaderboard_argsLimit(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_leaderboard_argsLimit(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*int32, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+	if tmp, ok := rawArgs["limit"]; ok {
+		return ec.unmarshalOInt2ᚖint32(ctx, tmp)
+	}
+
+	var zeroVal *int32
 	return zeroVal, nil
 }
 
@@ -945,7 +973,7 @@ func (ec *executionContext) _Query_leaderboard(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Leaderboard(rctx)
+		return ec.resolvers.Query().Leaderboard(rctx, fc.Args["limit"].(*int32))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -962,7 +990,7 @@ func (ec *executionContext) _Query_leaderboard(ctx context.Context, field graphq
 	return ec.marshalNLeaderboard2ᚕᚖleaderboard_serviceᚋgraphᚋmodelᚐLeaderboardᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_leaderboard(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_leaderboard(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -981,6 +1009,17 @@ func (ec *executionContext) fieldContext_Query_leaderboard(_ context.Context, fi
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Leaderboard", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_leaderboard_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
