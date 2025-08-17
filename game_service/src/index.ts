@@ -36,6 +36,14 @@ const typeDefs = `#graphql
   }
   type Query {
     leaderboard: [User]
+    publisherConfig: PublisherConfig
+  }
+  type PublisherConfig {
+    batchSize: Int
+    intervalSeconds: Int
+  }
+  type Mutation {
+    updatePublisherConfig(batchSize: Int, intervalSeconds: Int): PublisherConfig
   }
 `;
 
@@ -45,10 +53,45 @@ interface User {
   score: number;
 }
 
+interface PublisherConfig {
+  batchSize: number;
+  intervalSeconds: number;
+}
+
+// Publisher configuration state
+let publisherConfig: PublisherConfig = {
+  batchSize: 2,
+  intervalSeconds: 20,
+};
+
+let currentInterval: NodeJS.Timeout | null = null;
+
 // Provide resolver functions for your schema fields
 const resolvers = {
   Query: {
     leaderboard: (): User[] => leaderboard,
+    publisherConfig: (): PublisherConfig => publisherConfig,
+  },
+  Mutation: {
+    updatePublisherConfig: async (
+      _: any,
+      { batchSize, intervalSeconds }: Partial<PublisherConfig>
+    ): Promise<PublisherConfig> => {
+      if (batchSize !== undefined) {
+        publisherConfig.batchSize = Math.max(1, batchSize); // Ensure at least 1
+      }
+      if (intervalSeconds !== undefined) {
+        publisherConfig.intervalSeconds = Math.max(1, intervalSeconds); // Ensure at least 1 second
+      }
+
+      // Restart the publisher with new config if it's running
+      if (currentInterval) {
+        clearInterval(currentInterval);
+        startScorePublisher();
+      }
+
+      return publisherConfig;
+    },
   },
 };
 
@@ -82,11 +125,14 @@ const startScorePublisher = async (): Promise<() => Promise<void>> => {
     throw err;
   }
 
-  const intervalId = setInterval(async () => {
+  currentInterval = setInterval(async () => {
     try {
-      const batch: User[] = generateRandomUsers(2);
+      const batch: User[] = generateRandomUsers(publisherConfig.batchSize);
       leaderboard.push(...batch); // Update in-memory leaderboard
-      console.log("Published Batch:", batch);
+      console.log(
+        `Published Batch of ${publisherConfig.batchSize} users:`,
+        batch
+      );
 
       const messages = batch.map((user) => ({
         key: user.user_id,

@@ -3,6 +3,7 @@ import {
   InMemoryCache,
   ApolloProvider,
   useQuery,
+  useMutation,
   gql,
 } from "@apollo/client";
 import {
@@ -33,7 +34,7 @@ import {
 } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import MenuIcon from "@mui/icons-material/Menu";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 let theme = createTheme({
   palette: {
@@ -101,6 +102,109 @@ const LEADERBOARD_QUERY = gql`
   }
 `;
 
+const PUBLISHER_CONFIG_QUERY = gql`
+  query GetPublisherConfig {
+    publisherConfig {
+      batchSize
+      intervalSeconds
+    }
+  }
+`;
+
+const UPDATE_PUBLISHER_CONFIG = gql`
+  mutation UpdatePublisherConfig($batchSize: Int, $intervalSeconds: Int) {
+    updatePublisherConfig(
+      batchSize: $batchSize
+      intervalSeconds: $intervalSeconds
+    ) {
+      batchSize
+      intervalSeconds
+    }
+  }
+`;
+
+function PublisherSettings() {
+  const { loading, error, data } = useQuery(PUBLISHER_CONFIG_QUERY, {
+    pollInterval: 5000,
+  });
+
+  const [updateConfig] = useMutation(UPDATE_PUBLISHER_CONFIG, {
+    refetchQueries: [{ query: PUBLISHER_CONFIG_QUERY }],
+  });
+
+  const [batchSize, setBatchSize] = useState<number>(2);
+  const [intervalSeconds, setIntervalSeconds] = useState<number>(20);
+
+  // Update local state when query data arrives
+  useEffect(() => {
+    if (data?.publisherConfig) {
+      setBatchSize(data.publisherConfig.batchSize);
+      setIntervalSeconds(data.publisherConfig.intervalSeconds);
+    }
+  }, [data]);
+
+  const handleUpdate = () => {
+    updateConfig({
+      variables: {
+        batchSize: parseInt(String(batchSize)),
+        intervalSeconds: parseInt(String(intervalSeconds)),
+      },
+    });
+  };
+
+  if (loading) return <CircularProgress />;
+  // if (error) return <Alert severity="error">Error loading publisher settings</Alert>;
+
+  return (
+    <Paper
+      sx={{
+        p: 2,
+        display: "flex",
+        flexDirection: "column",
+        marginBottom: 2,
+        background: "linear-gradient(145deg, #6d6d6dff, #595757ff)",
+        borderRadius: 4,
+      }}
+    >
+      <Typography variant="h6" gutterBottom>
+        Publisher Settings
+      </Typography>
+      <Grid container spacing={2} alignItems="center">
+        <Grid item xs={12} sm={5}>
+          <TextField
+            label="Batch Size"
+            type="number"
+            value={batchSize}
+            onChange={(e) => setBatchSize(Number(e.target.value))}
+            fullWidth
+            InputProps={{ inputProps: { min: 1 } }}
+          />
+        </Grid>
+        <Grid item xs={12} sm={5}>
+          <TextField
+            label="Interval (seconds)"
+            type="number"
+            value={intervalSeconds}
+            onChange={(e) => setIntervalSeconds(Number(e.target.value))}
+            fullWidth
+            InputProps={{ inputProps: { min: 1 } }}
+          />
+        </Grid>
+        <Grid item xs={12} sm={2}>
+          <Button
+            variant="contained"
+            onClick={handleUpdate}
+            fullWidth
+            sx={{ height: "56px" }}
+          >
+            Update
+          </Button>
+        </Grid>
+      </Grid>
+    </Paper>
+  );
+}
+
 function LeaderboardDashboard() {
   const [limit, setLimit] = useState(10);
   const { loading, error, data } = useQuery(LEADERBOARD_QUERY, {
@@ -118,6 +222,7 @@ function LeaderboardDashboard() {
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+      <PublisherSettings />
       <Grid container spacing={4}>
         <Grid item xs={12}>
           <Paper
