@@ -10,13 +10,18 @@ if (!KAFKA_BROKER) {
   process.exit(1);
 }
 
+console.log("Attempting to connect to Kafka broker:", KAFKA_BROKER);
+
 const kafka = new Kafka({
   clientId: "game-service",
   brokers: [KAFKA_BROKER],
   retry: {
-    retries: 5,
-    initialRetryTime: 300,
+    retries: 8,
+    initialRetryTime: 1000,
+    maxRetryTime: 30000,
+    factor: 1.5,
   },
+  connectionTimeout: 10000,
 });
 
 const producer = kafka.producer();
@@ -69,8 +74,13 @@ const generateRandomUsers = (batchSize: number): User[] => {
 // Function to simulate publishing scores
 const startScorePublisher = async (): Promise<() => Promise<void>> => {
   console.log(`Connecting to Kafka broker at ${KAFKA_BROKER}...`);
-  await producer.connect();
-  console.log("Successfully connected to Kafka.");
+  try {
+    await producer.connect();
+    console.log("Successfully connected to Kafka.");
+  } catch (err) {
+    console.error("Failed to connect to Kafka:", err);
+    throw err;
+  }
 
   const intervalId = setInterval(async () => {
     try {
